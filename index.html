@@ -3,27 +3,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Real One | Friendship Quiz</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #17152e, #49316b);
       color: white;
       text-align: center;
-      padding: 30px 16px;
+      padding: 24px 14px;
       min-height: 100vh;
-      box-sizing: border-box;
     }
     main {
-      max-width: 420px;
-      margin: 40px auto;
-      padding: 25px;
+      max-width: 440px;
+      margin: 24px auto;
+      padding: 24px;
       background: #ffffff16;
       border-radius: 22px;
     }
     input, button {
-      box-sizing: border-box;
       width: 100%;
       padding: 14px;
       margin-top: 12px;
@@ -35,34 +34,160 @@
       background: #ffcc70;
       color: #21152d;
       font-weight: bold;
+      cursor: pointer;
     }
-    #result { margin-top: 18px; }
+    .question {
+      text-align: left;
+      margin: 22px 0;
+      padding: 14px;
+      background: #ffffff12;
+      border-radius: 12px;
+    }
+    .question label {
+      display: block;
+      padding: 8px 0;
+    }
+    .question input { width: auto; margin-right: 8px; }
+    #result { margin-top: 18px; overflow-wrap: anywhere; }
   </style>
 </head>
 <body>
   <main>
     <h1>💜 Real One</h1>
     <p>Friendship is easy to claim. Let's test it!</p>
-    <input id="name" placeholder="Enter your name">
-    <button onclick="startQuiz()">Start the quiz</button>
-    <div id="result"></div>
+
+    <form id="quizForm">
+      <input id="name" maxlength="60"
+        placeholder="Enter your name" required>
+
+      <div class="question">
+        <strong>1. What makes a real friendship?</strong>
+        <label><input type="radio" name="q1" value="1" required>
+          Trust and honesty</label>
+        <label><input type="radio" name="q1" value="0">
+          Only popularity</label>
+      </div>
+
+      <div class="question">
+        <strong>2. Your friend has a bad day. You should...</strong>
+        <label><input type="radio" name="q2" value="1" required>
+          Listen and support them</label>
+        <label><input type="radio" name="q2" value="0">
+          Ignore them</label>
+      </div>
+
+      <div class="question">
+        <strong>3. A friend shares a secret. You should...</strong>
+        <label><input type="radio" name="q3" value="1" required>
+          Respect their privacy</label>
+        <label><input type="radio" name="q3" value="0">
+          Tell everyone</label>
+      </div>
+
+      <div class="question">
+        <strong>4. When you disagree, you should...</strong>
+        <label><input type="radio" name="q4" value="1" required>
+          Talk respectfully</label>
+        <label><input type="radio" name="q4" value="0">
+          Insult each other</label>
+      </div>
+
+      <div class="question">
+        <strong>5. A strong friendship needs...</strong>
+        <label><input type="radio" name="q5" value="1" required>
+          Care and effort</label>
+        <label><input type="radio" name="q5" value="0">
+          Gifts only</label>
+      </div>
+
+      <button id="submitBtn" type="submit">
+        Submit my quiz 💜
+      </button>
+    </form>
+
+    <div id="result" role="status" aria-live="polite"></div>
   </main>
-  <script>
-    function startQuiz() {
-      const name = document.getElementById('name').value.trim();
-      const result = document.getElementById('result');
-      if (!name) {
-        result.textContent = 'Please enter your name first!';
+
+  <script type="module">
+    import { createClient } from
+      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+    const SUPABASE_KEY = 'YOUR_SUPABASE_PUBLISHABLE_KEY';
+
+    const result = document.getElementById('result');
+    const form = document.getElementById('quizForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const configured =
+      SUPABASE_URL.startsWith('https://') &&
+      !SUPABASE_URL.includes('YOUR_SUPABASE') &&
+      SUPABASE_KEY.length > 20 &&
+      !SUPABASE_KEY.includes('YOUR_SUPABASE');
+
+    const supabase = configured
+      ? createClient(SUPABASE_URL, SUPABASE_KEY)
+      : null;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (!supabase) {
+        result.textContent =
+          'Setup incomplete: add your Supabase URL and public key.';
         return;
       }
-      result.innerHTML = '';
-      const heading = document.createElement('h2');
-      heading.textContent = 'Welcome, ' + name + '! 💜';
-      const message = document.createElement('p');
-      message.textContent =
-        'Your friendship quiz website is ready for the next step!';
-      result.append(heading, message);
-    }
+
+      const name = document.getElementById('name').value.trim();
+
+      if (!name) {
+        result.textContent = 'Please enter your name.';
+        return;
+      }
+
+      let score = 0;
+      for (let i = 1; i <= 5; i++) {
+        const answer = form.querySelector(
+          `input[name="q${i}"]:checked`
+        );
+        if (!answer) {
+          result.textContent = 'Please answer every question.';
+          return;
+        }
+        score += Number(answer.value);
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving your result...';
+      result.textContent = '';
+
+      try {
+        const { error } = await supabase
+          .from('quiz_results')
+          .insert({
+            'player name': name,
+            'score': score,
+            'total question': 5,
+            'created at': new Date().toISOString()
+          });
+
+        if (error) throw error;
+
+        result.textContent =
+          `💜 ${name}, your score is ${score}/5. ` +
+          'Your result was saved successfully!';
+        form.reset();
+      } catch (error) {
+        console.error('Quiz submission failed:', error);
+        result.textContent =
+          'Could not save your result. Check your Supabase ' +
+          'column names, column types, and INSERT policy. ' +
+          'Please try again.';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit my quiz 💜';
+      }
+    });
   </script>
 </body>
 </html>
