@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real One | Friendship Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #17152e, #49316b);
+      color: white;
+      text-align: center;
+      padding: 30px 16px;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    main {
+      max-width: 420px;
+      margin: 40px auto;
+      padding: 25px;
+      background: #ffffff16;
+      border-radius: 22px;
+    }
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+    button {
+      background: #ffcc70;
+      color: #21152d;
+      font-weight: bold;
+    }
+    #result { margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>💜 Real One</h1>
+    <p>Friendship is easy to claim. Let's test it!</p>
+    <input id="name" placeholder="Enter your name">
+    <button onclick="startQuiz()">Start the quiz</button>
+    <div id="result"></div>
+  </main>
+  <script>
+    function startQuiz() {
+      const name = document.getElementById('name').value.trim();
+      const result = document.getElementById('result');
+      if (!name) {
+        result.textContent = 'Please enter your name first!';
+        return;
+      }
+      result.innerHTML = '';
+      const heading = document.createElement('h2');
+      heading.textContent = 'Welcome, ' + name + '! 💜';
+      const message = document.createElement('p');
+      message.textContent =
+        'Your friendship quiz website is ready for the next step!';
+      result.append(heading, message);
+    }
+  </script>
+</body>
+</html>
